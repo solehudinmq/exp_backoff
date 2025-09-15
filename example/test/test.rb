@@ -20,7 +20,7 @@ def api_call_simulation(success_rate = 0.2)
   end
 end
 
-exponential_backoff = ExpBackoff::Retry.new(3, 0.5, 0.5)
+exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
 
 result = exponential_backoff.run do
   api_call_simulation[:data]

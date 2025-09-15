@@ -24,7 +24,7 @@ RSpec.describe ExpBackoff do
   end
 
   it "retry successful on first try, with external parameters" do
-    eb = ExpBackoff::Retry.new(3, 0.5, 0.5)
+    eb = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
     result = eb.run do 
       success_simulation
     end
@@ -44,7 +44,7 @@ RSpec.describe ExpBackoff do
   end
 
   it 'retry failed on first try, with external parameters' do
-    eb = ExpBackoff::Retry.new(3, 0.5, 0.5)
+    eb = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
     result = eb.run do 
       timeout_simulation
     end

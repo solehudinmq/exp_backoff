@@ -11,10 +11,10 @@ module ExpBackoff
     # max_retries = the maximum number of retries the system will perform.
     # base_interval = this is the base value to start the exponential backoff calculation.
     # max_jitter_factor = a random factor added to the wait time to prevent multiple clients from retrying at the same time.
-    def initialize(max_retries = 5, base_interval = 0.5, max_jitter_factor = 0.5)
-      @max_retries = max_retries
-      @base_interval = base_interval
-      @max_jitter_factor = max_jitter_factor
+    def initialize(max_retries: nil, base_interval: nil, max_jitter_factor: nil)
+      @max_retries = max_retries || 5
+      @base_interval = base_interval || 0.5
+      @max_jitter_factor = max_jitter_factor || 0.5
     end
 
     def run
