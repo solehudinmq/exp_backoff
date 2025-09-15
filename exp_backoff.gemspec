@@ -8,11 +8,11 @@ Gem::Specification.new do |spec|
   spec.authors = ["SolehMQ"]
   spec.email = ["solehudinmq@gmail.com"]
 
-  spec.summary = "TODO: Write a short summary, because RubyGems requires one."
-  spec.description = "TODO: Write a longer description or delete this line."
-  spec.homepage = "TODO: Put your gem's website or public repo URL here."
+  spec.summary = "Exp backoff is a Ruby library that implements a retry mechanism with an exponential backoff strategy. Its purpose is to exponentially increase the wait time between each failed retry attempt. This ensures the system's resilience to failures and allows the affected service time to fully recover."
+  spec.description = "With the Exp backoff library, our applications now have the ability to perform retry processes automatically. This retry strategy works well in combination with circuit breakers and rollback mechanisms when the number of retry failures reaches a maximum."
+  spec.homepage = "https://github.com/solehudinmq/exp_backoff"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.2.0"
+  spec.required_ruby_version = ">= 3.0.0"
 
   spec.metadata["allowed_push_host"] = "TODO: Set to your gem server 'https://example.com'"
   spec.metadata["homepage_uri"] = spec.homepage
