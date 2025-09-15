@@ -9,7 +9,8 @@ result = exponential_backoff.run do
   begin
     HTTParty.get('http://localhost:3000/api/data')
   rescue HTTParty::ResponseError => e
-    raise ExpBackoff::HttpError.new(e.message, e.response.code)
+    status_code = e.response.code
+    raise ExpBackoff::HttpError.new(e.message, status_code) unless status_code.to_s.start_with?('2') # hanya response yang tidak sukses
   rescue => e
     # error lain yang tidak di kenal anggap sebagai error 500
     raise ExpBackoff::HttpError.new(e.message, 500)

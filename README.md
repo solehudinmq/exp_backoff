@@ -83,7 +83,8 @@ result = exponential_backoff.run do
   begin
     api_call('http://localhost:4567/sync', { 'Content-Type'=> 'application/json' }, { "user_id": 1, "total_amount": 50000 })
   rescue HTTParty::ResponseError => e
-    raise ExpBackoff::HttpError.new(e.message, e.response.code)
+    status_code = e.response.code
+    raise ExpBackoff::HttpError.new(e.message, status_code) unless status_code.to_s.start_with?('2') # only response outside of success.
   rescue => e
     # if the error is unknown call this class to perform a retry, with the second parameter value set to 500.
     raise ExpBackoff::HttpError.new(e.message, 500)
