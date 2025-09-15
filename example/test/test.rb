@@ -9,13 +9,10 @@ result = exponential_backoff.run do
   begin
     HTTParty.get('http://localhost:3000/api/data')
   rescue HTTParty::ResponseError => e
-    # jika error 5xx panggil kelas ini untuk melakukan retry
-    if e.response.code.to_s.start_with?('5')
-      raise ExpBackoff::HttpError.new(e.message, e.response.code)
-    end
+    raise ExpBackoff::HttpError.new(e.message, e.response.code)
   rescue => e
     # error lain yang tidak di kenal anggap sebagai error 500
-    raise ExpBackoff::HttpError.new('Server bermasalah', 500)
+    raise ExpBackoff::HttpError.new(e.message, 500)
   end
 end
 

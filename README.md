@@ -46,7 +46,7 @@ description of parameters :
 - base_interval = this is the base value to start the exponential backoff calculation ( default value is 0.5 ).
 - max_jitter_factor = a random factor added to the wait time to prevent multiple clients from retrying at the same time ( default value is 0.5 ).
 
-If the server has a problem when calling the service, then call this class with the status code must be 5xx :
+If the server does not return a successful response, make sure the error is sent to this class :
 ```ruby
 raise ExpBackoff::HttpError.new(e.message, e.response.code)
 ```
@@ -54,7 +54,7 @@ raise ExpBackoff::HttpError.new(e.message, e.response.code)
 Or if there is another unknown error, you can do this (set the second parameter to 500) : 
 
 ```ruby
-raise ExpBackoff::HttpError.new('Server bermasalah', 500)
+raise ExpBackoff::HttpError.new(e.message, 500)
 ```
 
 How to use it in your application :
@@ -83,13 +83,10 @@ result = exponential_backoff.run do
   begin
     api_call('http://localhost:4567/sync', { 'Content-Type'=> 'application/json' }, { "user_id": 1, "total_amount": 50000 })
   rescue HTTParty::ResponseError => e
-    # if error 5xx call this class to retry.
-    if e.response.code.to_s.start_with?('5')
-      raise ExpBackoff::HttpError.new(e.message, e.response.code)
-    end
+    raise ExpBackoff::HttpError.new(e.message, e.response.code)
   rescue => e
     # if the error is unknown call this class to perform a retry, with the second parameter value set to 500.
-    raise ExpBackoff::HttpError.new('Server bermasalah', 500)
+    raise ExpBackoff::HttpError.new(e.message, 500)
   end
 end
 

@@ -35,13 +35,10 @@ RSpec.describe ExpBackoff do
       begin
         HTTParty.get('http://localhost:3000/api/data')
       rescue HTTParty::ResponseError => e
-        # if error 5xx call this class to retry.
-        if e.response.code.to_s.start_with?('5')
-          raise ExpBackoff::HttpError.new(e.message, e.response.code)
-        end
+        raise ExpBackoff::HttpError.new(e.message, e.response.code)
       rescue => e
         # if error is unknown call this class to do retry
-        raise ExpBackoff::HttpError.new('Server bermasalah', 500)
+        raise ExpBackoff::HttpError.new(e.message, 500)
       end
     end
 
@@ -55,13 +52,10 @@ RSpec.describe ExpBackoff do
       begin
         HTTParty.get('http://localhost:3000/api/data')
       rescue HTTParty::ResponseError => e
-        # if error 5xx call this class to retry.
-        if e.response.code.to_s.start_with?('5')
-          raise ExpBackoff::HttpError.new(e.message, e.response.code)
-        end
+        raise ExpBackoff::HttpError.new(e.message, e.response.code)
       rescue => e
         # if error is unknown call this class to do retry
-        raise ExpBackoff::HttpError.new('Server bermasalah', 500)
+        raise ExpBackoff::HttpError.new(e.message, 500)
       end
     end
 
