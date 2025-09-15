@@ -48,10 +48,12 @@ description of parameters :
 
 If the server has a problem when calling the service, then call this class with the status code must be 5xx :
 ```ruby
-raise ExpBackoff::HttpError.new(e.message, e.response.code)
+if e.response.code.to_s.start_with?('5')
+  raise ExpBackoff::HttpError.new(e.message, e.response.code)
+end
 ```
 
-Example : 
+Or if there is another unknown error, you can do this (set the second parameter to 500) : 
 
 ```ruby
 raise ExpBackoff::HttpError.new('Server bermasalah', 500)
@@ -63,6 +65,7 @@ How to use it in your application :
 source "https://rubygems.org"
 
 gem 'exp_backoff', git: 'git@github.com:solehudinmq/exp_backoff.git', branch: 'main'
+gem 'httparty'
 ```
 
 ```ruby
@@ -82,12 +85,12 @@ result = exponential_backoff.run do
   begin
     api_call('http://localhost:4567/sync', { 'Content-Type'=> 'application/json' }, { "user_id": 1, "total_amount": 50000 })
   rescue HTTParty::ResponseError => e
-    # jika error 5xx panggil kelas ini untuk melakukan retry
+    # if error 5xx call this class to retry.
     if e.response.code.to_s.start_with?('5')
       raise ExpBackoff::HttpError.new(e.message, e.response.code)
     end
   rescue => e
-    # error lain yang tidak di kenal anggap sebagai error 500
+    # if the error is unknown call this class to perform a retry, with the second parameter value set to 500.
     raise ExpBackoff::HttpError.new('Server bermasalah', 500)
   end
 end
