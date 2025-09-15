@@ -48,7 +48,7 @@ description of parameters :
 
 If the server has a problem when calling the service, then call this class with the status code must be 5xx :
 ```ruby
-  raise ExpBackoff::HttpError.new(e.message, e.response.code)
+raise ExpBackoff::HttpError.new(e.message, e.response.code)
 ```
 
 Example : 
