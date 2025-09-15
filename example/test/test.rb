@@ -20,16 +20,12 @@ def api_call_simulation(success_rate = 0.2)
   end
 end
 
-begin
-  exponential_backoff = ExpBackoff::Retry.new(3, 0.5, 0.5)
+exponential_backoff = ExpBackoff::Retry.new(3, 0.5, 0.5)
 
-  result = exponential_backoff.run do
-    api_call_simulation[:data]
-  end
-
-  puts "result : #{result}"
-rescue => e
-  puts "Error retry : #{e.message}"
+result = exponential_backoff.run do
+  api_call_simulation[:data]
 end
+
+puts "result : #{result}"
 
 # bundle exec ruby test.rb

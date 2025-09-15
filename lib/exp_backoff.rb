@@ -24,7 +24,9 @@ module ExpBackoff
       while retries <= @max_retries
         begin
           # call the relevant service.
-          return yield
+          result = yield
+
+          return { status: 'success', data: result }
         rescue => e
           # if the number of failures < max failures then provide a waiting time with exponential backoff.
           if retries < @max_retries
@@ -38,7 +40,7 @@ module ExpBackoff
             sleep(sleep_duration)
             retries += 1
           else
-            raise 'The number of retry failures has reached the maximum.'
+            return { status: 'fail', error_message: 'The number of retry failures has reached the maximum.' }
           end
         end
       end
