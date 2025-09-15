@@ -1,29 +1,22 @@
 require 'exp_backoff'
 require 'byebug'
-
-def api_call_simulation(success_rate = 0.2)
-  if rand < success_rate
-    puts "Operasi berhasil! 🎉"
-    
-    {
-      "data": {
-        "id": 1,
-        "title": "Post 15 Name",
-        "content": "Post 15 Content",
-        "created_at": "2025-09-12T02:04:29.034Z",
-        "updated_at": "2025-09-12T02:04:29.034Z"
-      }
-    }
-  else
-    puts "Operasi gagal. 😞"
-    raise "Kesalahan sementara (Transient Error)."
-  end
-end
+require 'httparty'
 
 exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
 
+# httparty
 result = exponential_backoff.run do
-  api_call_simulation[:data]
+  begin
+    HTTParty.get('http://localhost:3000/api/data')
+  rescue HTTParty::ResponseError => e
+    # jika error 5xx panggil kelas ini untuk melakukan retry
+    if e.response.code.to_s.start_with?('5')
+      raise ExpBackoff::HttpError.new(e.message, e.response.code)
+    end
+  rescue => e
+    # error lain yang tidak di kenal anggap sebagai error 500
+    raise ExpBackoff::HttpError.new('Server bermasalah', 500)
+  end
 end
 
 puts "result : #{result}"

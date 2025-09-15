@@ -6,6 +6,15 @@ module ExpBackoff
   class Error < StandardError; end
   # Your code goes here...
 
+  class HttpError < StandardError
+    attr_reader :status_code
+
+    def initialize(message, status_code)
+      super(message)
+      @status_code = status_code
+    end
+  end
+
   class Retry
     # the meaning of each parameter :
     # max_retries = the maximum number of retries the system will perform.
@@ -27,7 +36,9 @@ module ExpBackoff
           result = yield
 
           return { status: 'success', data: result }
-        rescue => e
+        rescue HttpError => e
+          return { status: 'fail', error_message: 'Response status code is not 5xx.' } unless e.status_code.to_s.start_with?('5')
+
           # if the number of failures < max failures then provide a waiting time with exponential backoff.
           if retries < @max_retries
             # Calculate the time lag with exponential backoff.

@@ -5,10 +5,6 @@ RSpec.describe ExpBackoff do
     { message: "Data received successfully!" }
   end
 
-  def timeout_simulation
-    raise("Timeout!")
-  end
-
   it "has a version number" do
     expect(ExpBackoff::VERSION).not_to be nil
   end
@@ -33,23 +29,57 @@ RSpec.describe ExpBackoff do
     expect(result[:data][:message]).to be('Data received successfully!')
   end
 
-  it 'retry failed on first try, with default parameters' do
+  it 'retry failed on first try, with default parameters & status code is 5xx' do
     eb = ExpBackoff::Retry.new
-    result = eb.run do 
-      timeout_simulation
+    result = eb.run do
+      begin
+        HTTParty.get('http://localhost:3000/api/data')
+      rescue HTTParty::ResponseError => e
+        # if error 5xx call this class to retry.
+        if e.response.code.to_s.start_with?('5')
+          raise ExpBackoff::HttpError.new(e.message, e.response.code)
+        end
+      rescue => e
+        # if error is unknown call this class to do retry
+        raise ExpBackoff::HttpError.new('Server bermasalah', 500)
+      end
     end
 
     expect(result[:status]).to be('fail')
     expect(result[:error_message]).to be('The number of retry failures has reached the maximum.')
   end
 
-  it 'retry failed on first try, with external parameters' do
+  it 'retry failed on first try, with external parameters & status code is 5xx' do
     eb = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
     result = eb.run do 
-      timeout_simulation
+      begin
+        HTTParty.get('http://localhost:3000/api/data')
+      rescue HTTParty::ResponseError => e
+        # if error 5xx call this class to retry.
+        if e.response.code.to_s.start_with?('5')
+          raise ExpBackoff::HttpError.new(e.message, e.response.code)
+        end
+      rescue => e
+        # if error is unknown call this class to do retry
+        raise ExpBackoff::HttpError.new('Server bermasalah', 500)
+      end
     end
 
     expect(result[:status]).to be('fail')
     expect(result[:error_message]).to be('The number of retry failures has reached the maximum.')
+  end
+
+  it 'retry failed on first try, with status code is not 5xx' do
+    eb = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
+    result = eb.run do 
+      begin
+        HTTParty.get('http://localhost:3000/api/data')
+      rescue => e
+        raise ExpBackoff::HttpError.new('Unauthorized', 401)
+      end
+    end
+
+    expect(result[:status]).to be('fail')
+    expect(result[:error_message]).to be('Response status code is not 5xx.')
   end
 end
