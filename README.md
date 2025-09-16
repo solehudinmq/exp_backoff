@@ -1,6 +1,6 @@
 # ExpBackoff
 
-Exp backoff is a Ruby library that implements a retry mechanism with an exponential backoff strategy. Its purpose is to exponentially increase the wait time between each failed retry attempt. This ensures the system's resilience to failures and allows the affected service time to fully recover.
+Exp backoff is a Ruby library that implements a retry mechanism with an exponential backoff and jitter strategy. Its purpose is to exponentially increase the wait time between each failed retry attempt. This ensures the system's resilience to failures and allows the affected service time to fully recover.
 
 With the Exp backoff library, our applications now have the ability to perform retry processes automatically. This retry strategy works well in combination with circuit breakers and rollback mechanisms when the number of retry failures reaches a maximum.
 
