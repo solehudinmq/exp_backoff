@@ -69,6 +69,7 @@ gem 'httparty'
 ```ruby
 # test.rb
 require 'exp_backoff'
+require 'httparty'
 
 def api_call(url, header, body)
   HTTParty.post(url,
