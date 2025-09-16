@@ -9,7 +9,7 @@ With the Exp backoff library, our applications now have the ability to perform r
 Potential problems when there is no retry mechanism in our system :
 ![Logo Ruby](https://github.com/solehudinmq/exp_backoff/blob/development/high_flow/Exp%20Backoff.jpg)
 
-With the Exponential Backoff retry mechanism, our system now has the ability to perform retry :
+With the Exponential Backoff and jitter retry mechanism, our system now has the ability to perform retry :
 ![Logo Ruby](https://github.com/solehudinmq/exp_backoff/blob/development/high_flow/Exp%20Backoff-solution.jpg)
 
 ## Installation
