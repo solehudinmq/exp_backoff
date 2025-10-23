@@ -49,7 +49,7 @@ description of parameters :
 When you want to do a retry, call this class :
 ```ruby
 # usually a retry is performed when the server response is 408, 429, 500, 502, 503 or 504.
-raise ExpBackoff::HttpError.new(error_message, status_code)
+raise ExpBackoff::Error::HttpError.new(error_message, status_code)
 ```
 
 How to use it in your application :
