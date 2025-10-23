@@ -48,8 +48,8 @@ description of parameters :
 
 When you want to do a retry, call this class :
 ```ruby
-# usually a retry is performed when the server response is 503 (Service Unavailable), 504 (Gateway Timeout) or 429 (Too Many Requests).
-raise ExpBackoff::HttpError.new(error_message, status_code) if [503, 504, 429].include?(status_code)
+# usually a retry is performed when the server response is 408, 429, 500, 502, 503 or 504.
+raise ExpBackoff::HttpError.new(error_message, status_code)
 ```
 
 How to use it in your application :
@@ -165,16 +165,17 @@ end
 # curl --location 'http://localhost:4567/orders'
 ```
 
-- test.rb
+- retry.rb
 ```ruby
+# retry.rb
 require 'exp_backoff'
 require 'byebug'
 require 'httparty'
-require 'json'
 
 def call_retry(url, request_body, headers)
   exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
 
+  # httparty
   result = exponential_backoff.run do
     response = HTTParty.post(url, 
       body: request_body,
@@ -184,7 +185,6 @@ def call_retry(url, request_body, headers)
 
     status_code = response.code
 
-    # usually a retry is performed when the server response is 503, 504 or 429.
     if [503, 504, 429].include?(status_code)
       raise ExpBackoff::HttpError.new(response.parsed_response["error"], status_code)
     elsif status_code.to_s.start_with?('2')
@@ -194,6 +194,12 @@ def call_retry(url, request_body, headers)
   
   result
 end
+```
+
+- test.rb
+```ruby
+require_relative 'retry'
+require 'json'
 
 puts "===================== successful retry scenario =========================="
 
@@ -215,6 +221,17 @@ error_result = call_retry('http://localhost:4567/simulation_server_problems', {
 }.to_json, { 'Content-Type' => 'application/json' })
 
 puts "error_result : #{error_result[:error_message]}"
+
+sleep 2
+puts "===================== retry is not allowed scenario =========================="
+
+# unauthorized
+error_result2 = call_retry('http://localhost:4567/simulation_unauthorized', { 
+  user_id: 1,
+  total_amount: 20000
+}.to_json, { 'Content-Type' => 'application/json' })
+
+puts "error_result 2 : #{error_result2[:error_message]}"
 
 # test retry : 
 # bundle exec ruby test.rb 

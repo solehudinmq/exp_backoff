@@ -3,8 +3,7 @@
 require_relative "exp_backoff/version"
 
 module ExpBackoff
-  class Error < StandardError; end
-  # Your code goes here...
+  RETRY_STATUS_CODE = [408, 429, 500, 502, 503, 504].freeze
 
   class HttpError < StandardError
     attr_reader :status_code
@@ -34,10 +33,14 @@ module ExpBackoff
         begin
           # call the relevant service.
           result = yield
-
-          return { status: 'success', data: result }
+          
+          if result
+            return { status: 'success', data: result }
+          else
+            return { status: 'fail', error_message: 'Retry is not allowed for this status code.' }
+          end
         rescue HttpError => e
-          return { status: 'fail', error_message: "Your response status code is #{e.status_code.to_s}, only status codes 503, 504 and 429 can be retried." } unless [503, 504, 429].include?(e.status_code)
+          return { status: 'fail', error_message: "Your response status code is #{e.status_code.to_s}, only status codes #{RETRY_STATUS_CODE.join(', ')} can be retried." } unless RETRY_STATUS_CODE.include?(e.status_code)
 
           # if the number of failures < max failures then provide a waiting time with exponential backoff.
           if retries < @max_retries

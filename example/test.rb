@@ -22,5 +22,16 @@ error_result = call_retry('http://localhost:4567/simulation_server_problems', {
 
 puts "error_result : #{error_result[:error_message]}"
 
+sleep 2
+puts "===================== retry is not allowed scenario =========================="
+
+# unauthorized
+error_result2 = call_retry('http://localhost:4567/simulation_unauthorized', { 
+  user_id: 1,
+  total_amount: 20000
+}.to_json, { 'Content-Type' => 'application/json' })
+
+puts "error_result 2 : #{error_result2[:error_message]}"
+
 # test retry : 
 # bundle exec ruby test.rb 
