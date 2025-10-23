@@ -16,7 +16,7 @@ def call_retry(url, request_body, headers)
     status_code = response.code
 
     if [408, 429, 500, 502, 503, 504].include?(status_code)
-      raise ExpBackoff::HttpError.new(response.parsed_response["error"], status_code)
+      raise ExpBackoff::Error::HttpError.new(response.parsed_response["error"], status_code)
     elsif status_code.to_s.start_with?('2')
       response
     end

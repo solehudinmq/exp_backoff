@@ -1,6 +1,6 @@
 GIT
   remote: git@github.com:solehudinmq/exp_backoff.git
-  revision: 70fbeefc404240cb3fd04bd8c188475d4e73fbbb
+  revision: b8ced82480d5e76f1f09fe603533ffde6095e529
   branch: main
   specs:
     exp_backoff (0.1.0)
