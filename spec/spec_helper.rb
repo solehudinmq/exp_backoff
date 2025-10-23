@@ -2,6 +2,9 @@
 
 require "exp_backoff"
 require "httparty"
+require "json"
+
+require_relative '../example/retry'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

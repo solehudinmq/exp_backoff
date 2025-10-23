@@ -46,62 +46,179 @@ description of parameters :
 - base_interval = this is the base value to start the exponential backoff calculation ( default value is 0.5 ).
 - max_jitter_factor = a random factor added to the wait time to prevent multiple clients from retrying at the same time ( default value is 0.5 ).
 
-If the server does not return a successful response, make sure the error is sent to this class :
+When you want to do a retry, call this class :
 ```ruby
-raise ExpBackoff::HttpError.new(e.message, e.response.code)
-```
-
-Or if there is another unknown error, you can do this (set the second parameter to 500) : 
-
-```ruby
-raise ExpBackoff::HttpError.new(e.message, 500)
+# usually a retry is performed when the server response is 503 (Service Unavailable), 504 (Gateway Timeout) or 429 (Too Many Requests).
+raise ExpBackoff::HttpError.new(error_message, status_code) if [503, 504, 429].include?(status_code)
 ```
 
 How to use it in your application :
+- Gemfile : 
 ```ruby
 # Gemfile
+# frozen_string_literal: true
+
 source "https://rubygems.org"
 
+gem "sinatra"
 gem 'exp_backoff', git: 'git@github.com:solehudinmq/exp_backoff.git', branch: 'main'
+gem "byebug"
 gem 'httparty'
+gem "activerecord"
+gem "sqlite3"
+gem "rackup", "~> 2.2"
+gem "puma", "~> 7.1"
 ```
 
+- order.rb : 
 ```ruby
-# test.rb
-require 'exp_backoff'
-require 'httparty'
+# order.rb
+require 'sinatra'
+require 'active_record'
 
-def api_call(url, header, body)
-  HTTParty.post(url,
-    body: body.to_json,
-    headers: header
-  )
+ActiveRecord::Base.establish_connection(
+  adapter: 'sqlite3',
+  database: 'db/development.sqlite3'
+)
+
+Dir.mkdir('db') unless File.directory?('db')
+
+class Order < ActiveRecord::Base
 end
 
-exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 1, max_jitter_factor: 1)
+ActiveRecord::Schema.define do
+  unless ActiveRecord::Base.connection.table_exists?(:orders)
+    create_table :orders do |t|
+        t.integer :user_id
+        t.date :order_date
+        t.decimal :total_amount
+        t.string :status, default: :waiting
+        t.timestamps
+    end
+  end
+end
+```
 
-result = exponential_backoff.run do
+- app.rb
+```ruby
+# app.rb
+require 'sinatra'
+require 'json'
+require 'byebug'
+
+require_relative 'order'
+
+before do
+  content_type :json
+end
+
+# create data order success
+post '/orders' do
   begin
-    api_call('http://localhost:4567/sync', { 'Content-Type'=> 'application/json' }, { "user_id": 1, "total_amount": 50000 })
-  rescue HTTParty::ResponseError => e
-    status_code = e.response.code
-    raise ExpBackoff::HttpError.new(e.message, status_code) unless status_code.to_s.start_with?('2') # only response outside of success.
+    request_body = JSON.parse(request.body.read)
+
+    # save request data to redis queue
+    order = Order.new(request_body)
+    
+    if order.save
+      { order_id: order.id, message: 'success' }.to_json
+    else
+      status 400
+      return { error: order.errors.message }.to_json
+    end
   rescue => e
-    # if the error is unknown call this class to perform a retry, with the second parameter value set to 500.
-    raise ExpBackoff::HttpError.new(e.message, 500)
+    status 500
+    return { error: e.message }.to_json
   end
 end
 
-# cd your_project
-# bundle install
-# bundle exec ruby test.rb
+post '/simulation_server_problems' do
+  status 503
+  return { error: 'The server is having problems.' }.to_json
+end
+
+# get data orders
+get '/orders' do
+  begin
+    orders = Order.all
+
+    { count: orders.size, orders: orders }.to_json
+  rescue => e
+    status 500
+    return { error: e.message }.to_json
+  end
+end
+
+# ====== run producer ======
+# 1. open terminal
+# 2. cd your_project
+# 3. bundle install
+# 4. bundle exec ruby app.rb
+# 5. create data order
+# curl --location 'http://localhost:4567/orders' \
+# --header 'Content-Type: application/json' \
+# --data '{
+#     "user_id": 1,
+#     "total_amount": 30000
+# }'
+# 6. get data order
+# curl --location 'http://localhost:4567/orders'
 ```
 
-## Development
+- test.rb
+```ruby
+require 'exp_backoff'
+require 'byebug'
+require 'httparty'
+require 'json'
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+def call_retry(url, request_body, headers)
+  exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+  result = exponential_backoff.run do
+    response = HTTParty.post(url, 
+      body: request_body,
+      headers: headers,
+      timeout: 3
+    )
+
+    status_code = response.code
+
+    # usually a retry is performed when the server response is 503, 504 or 429.
+    if [503, 504, 429].include?(status_code)
+      raise ExpBackoff::HttpError.new(response.parsed_response["error"], status_code)
+    elsif status_code.to_s.start_with?('2')
+      response
+    end
+  end
+  
+  result
+end
+
+puts "===================== successful retry scenario =========================="
+
+# success
+success_result = call_retry('http://localhost:4567/orders', { 
+  user_id: 1,
+  total_amount: 20000
+}.to_json, { 'Content-Type' => 'application/json' })
+
+puts "success_result : #{success_result[:data].parsed_response}"
+
+sleep 2
+puts "===================== retry failed scenario =========================="
+
+# failed
+error_result = call_retry('http://localhost:4567/simulation_server_problems', { 
+  user_id: 1,
+  total_amount: 20000
+}.to_json, { 'Content-Type' => 'application/json' })
+
+puts "error_result : #{error_result[:error_message]}"
+
+# test retry : 
+# bundle exec ruby test.rb 
+```
 
 ## Contributing
 

@@ -37,7 +37,7 @@ module ExpBackoff
 
           return { status: 'success', data: result }
         rescue HttpError => e
-          return { status: 'fail', error_message: 'Response status code is not 5xx.' } unless e.status_code.to_s.start_with?('5')
+          return { status: 'fail', error_message: "Your response status code is #{e.status_code.to_s}, only status codes 503, 504 and 429 can be retried." } unless [503, 504, 429].include?(e.status_code)
 
           # if the number of failures < max failures then provide a waiting time with exponential backoff.
           if retries < @max_retries
