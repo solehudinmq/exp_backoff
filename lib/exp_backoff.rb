@@ -1,18 +1,12 @@
 # frozen_string_literal: true
 
 require_relative "exp_backoff/version"
+require_relative "exp_backoff/error"
 
 module ExpBackoff
   RETRY_STATUS_CODE = [408, 429, 500, 502, 503, 504].freeze
-
-  class HttpError < StandardError
-    attr_reader :status_code
-
-    def initialize(message, status_code)
-      super(message)
-      @status_code = status_code
-    end
-  end
+  
+  include ExpBackoff::Error
 
   class Retry
     # the meaning of each parameter :
@@ -39,7 +33,7 @@ module ExpBackoff
           else
             return { status: 'fail', error_message: 'Retry is not allowed for this status code.' }
           end
-        rescue HttpError => e
+        rescue ExpBackoff::Error::HttpError => e
           return { status: 'fail', error_message: "Your response status code is #{e.status_code.to_s}, only status codes #{RETRY_STATUS_CODE.join(', ')} can be retried." } unless RETRY_STATUS_CODE.include?(e.status_code)
 
           # if the number of failures < max failures then provide a waiting time with exponential backoff.

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "byebug"
 require "exp_backoff"
 require "httparty"
 require "json"
