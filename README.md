@@ -53,7 +53,6 @@ raise ExpBackoff::Error::HttpError.new(error_message, status_code)
 ```
 
 How to use it in your application :
-- Gemfile : 
 ```ruby
 # Gemfile
 # frozen_string_literal: true
@@ -70,7 +69,6 @@ gem "rackup", "~> 2.2"
 gem "puma", "~> 7.1"
 ```
 
-- order.rb : 
 ```ruby
 # order.rb
 require 'sinatra'
@@ -99,7 +97,6 @@ ActiveRecord::Schema.define do
 end
 ```
 
-- app.rb
 ```ruby
 # app.rb
 require 'sinatra'
@@ -172,7 +169,6 @@ end
 # curl --location 'http://localhost:4567/orders'
 ```
 
-- retry.rb
 ```ruby
 # retry.rb
 require 'exp_backoff'
@@ -182,7 +178,6 @@ require 'httparty'
 def call_retry(url, request_body, headers)
   exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
 
-  # httparty
   result = exponential_backoff.run do
     response = HTTParty.post(url, 
       body: request_body,
@@ -203,7 +198,6 @@ def call_retry(url, request_body, headers)
 end
 ```
 
-- test.rb
 ```ruby
 # test.rb
 require_relative 'retry'
