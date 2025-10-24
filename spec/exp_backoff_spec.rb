@@ -2,6 +2,10 @@
 
 # required to run : bundle exec ruby app.rb
 RSpec.describe ExpBackoff do
+  before(:all) do
+    Order.delete_all
+  end
+
   it "has a version number" do
     expect(ExpBackoff::VERSION).not_to be nil
   end
@@ -34,6 +38,6 @@ RSpec.describe ExpBackoff do
 
     
     expect(result[:status]).to be('fail')
-    expect(result[:error_message]).to be('Retry is not allowed for this status code.')
+    expect(result[:error_message]).to eq('Your response status code is 401, only status codes 408, 429, 500, 502, 503, 504 can be retried.')
   end
 end

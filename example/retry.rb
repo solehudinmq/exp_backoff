@@ -5,7 +5,6 @@ require 'httparty'
 def call_retry(url, request_body, headers)
   exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
 
-  # httparty
   result = exponential_backoff.run do
     response = HTTParty.post(url, 
       body: request_body,
@@ -13,13 +12,7 @@ def call_retry(url, request_body, headers)
       timeout: 3
     )
 
-    status_code = response.code
-
-    if [408, 429, 500, 502, 503, 504].include?(status_code)
-      raise ExpBackoff::Error::HttpError.new(response.parsed_response["error"], status_code)
-    elsif status_code.to_s.start_with?('2')
-      response
-    end
+    response
   end
   
   result

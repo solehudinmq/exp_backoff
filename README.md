@@ -46,12 +46,6 @@ description of parameters :
 - base_interval = this is the base value to start the exponential backoff calculation ( default value is 0.5 ).
 - max_jitter_factor = a random factor added to the wait time to prevent multiple clients from retrying at the same time ( default value is 0.5 ).
 
-When you want to do a retry, call this class :
-```ruby
-# usually a retry is performed when the server response is 408, 429, 500, 502, 503 or 504.
-raise ExpBackoff::Error::HttpError.new(error_message, status_code)
-```
-
 How to use it in your application :
 ```ruby
 # Gemfile
@@ -59,6 +53,7 @@ How to use it in your application :
 
 source "https://rubygems.org"
 
+# gem 'exp_backoff', path: '../exp_backoff' # for test in localhost
 gem "sinatra"
 gem 'exp_backoff', git: 'git@github.com:solehudinmq/exp_backoff.git', branch: 'main'
 gem "byebug"
@@ -185,13 +180,7 @@ def call_retry(url, request_body, headers)
       timeout: 3
     )
 
-    status_code = response.code
-
-    if [408, 429, 500, 502, 503, 504].include?(status_code)
-      raise ExpBackoff::Error::HttpError.new(response.parsed_response["error"], status_code)
-    elsif status_code.to_s.start_with?('2')
-      response
-    end
+    response
   end
   
   result

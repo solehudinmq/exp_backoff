@@ -2,6 +2,7 @@
 
 require_relative "exp_backoff/version"
 require_relative "exp_backoff/error"
+require "httparty"
 
 module ExpBackoff
   RETRY_STATUS_CODE = [408, 429, 500, 502, 503, 504].freeze
@@ -27,12 +28,12 @@ module ExpBackoff
         begin
           # call the relevant service.
           result = yield
-          
-          if result
-            return { status: 'success', data: result }
-          else
-            return { status: 'fail', error_message: 'Retry is not allowed for this status code.' }
+
+          unless result.success?
+            raise ExpBackoff::Error::HttpError.new(result.parsed_response["error"], result.code)
           end
+          
+          return { status: 'success', data: result }
         rescue ExpBackoff::Error::HttpError => e
           return { status: 'fail', error_message: "Your response status code is #{e.status_code.to_s}, only status codes #{RETRY_STATUS_CODE.join(', ')} can be retried." } unless RETRY_STATUS_CODE.include?(e.status_code)
 
