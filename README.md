@@ -14,7 +14,7 @@ With the Exponential Backoff and jitter retry mechanism, our system now has the 
 
 ## Installation
 
-The minimum version of Ruby that must be installed is 3.0.
+The minimum version of Ruby that must be installed is 3.0. Only supports using the 'httpparty' gem to call the API.
 
 Add this line to your application's Gemfile :
 
@@ -37,7 +37,12 @@ require 'exp_backoff'
 exponential_backoff = ExpBackoff::Retry.new(max_retries: max_retries, base_interval: base_interval, max_jitter_factor: max_jitter_factor)
 
 result = exponential_backoff.run do
-  # call api service here 
+  # call api third party here (must use httparty gem)
+  HTTParty.post(url, 
+    body: body,
+    headers: headers,
+    timeout: timeout
+  )
 end
 ```
 

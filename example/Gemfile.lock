@@ -1,9 +1,10 @@
 GIT
   remote: git@github.com:solehudinmq/exp_backoff.git
-  revision: 2989ddc5b95e9d629f6757317fd370923ff6aaad
+  revision: 79d1148ade2ea36b78e825e941dfa5c87d6b5c76
   branch: main
   specs:
     exp_backoff (0.1.0)
+      httparty (~> 0.23)
 
 GEM
   remote: https://rubygems.org/
