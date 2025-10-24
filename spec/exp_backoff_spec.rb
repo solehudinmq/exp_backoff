@@ -36,7 +36,6 @@ RSpec.describe ExpBackoff do
       total_amount: 20000
     }.to_json, { 'Content-Type' => 'application/json' })
 
-    
     expect(result[:status]).to be('fail')
     expect(result[:error_message]).to eq('Your response status code is 401, only status codes 408, 429, 500, 502, 503, 504 can be retried.')
   end

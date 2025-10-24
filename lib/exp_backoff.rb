@@ -30,7 +30,7 @@ module ExpBackoff
           result = yield
 
           unless result.success?
-            raise ExpBackoff::Error::HttpError.new(result.parsed_response["error"], result.code)
+            raise ExpBackoff::Error::HttpError.new(result.message, result.code)
           end
           
           return { status: 'success', data: result }
