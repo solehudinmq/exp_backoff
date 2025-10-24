@@ -34,7 +34,7 @@ In your ruby ​​code, add this :
 ```ruby
 require 'exp_backoff'
 
-exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 1, max_jitter_factor: 1)
+exponential_backoff = ExpBackoff::Retry.new(max_retries: max_retries, base_interval: base_interval, max_jitter_factor: max_jitter_factor)
 
 result = exponential_backoff.run do
   # call api service here 
