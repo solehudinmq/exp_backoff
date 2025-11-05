@@ -1,5 +1,7 @@
-PATH
-  remote: ..
+GIT
+  remote: git@github.com:solehudinmq/exp_backoff.git
+  revision: b8e012d219a1c228dd443fe35a113487c472558b
+  branch: main
   specs:
     exp_backoff (0.1.0)
       httparty (~> 0.21)
