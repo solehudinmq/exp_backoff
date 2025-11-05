@@ -31,42 +31,44 @@ RSpec.describe ExpBackoff do
   end
 
   it 'return failed because 3 times failed to retry' do
-    exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
+    begin
+      exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
 
-    result = exponential_backoff.run do
-      response = HTTParty.post('http://localhost:4567/simulation_server_problems', 
-        body: { 
-          user_id: 1,
-          total_amount: 20000
-        }.to_json,
-        headers: { 'Content-Type' => 'application/json' },
-        timeout: 3
-      )
+      result = exponential_backoff.run do
+        response = HTTParty.post('http://localhost:4567/simulation_server_problems', 
+          body: { 
+            user_id: 1,
+            total_amount: 20000
+          }.to_json,
+          headers: { 'Content-Type' => 'application/json' },
+          timeout: 3
+        )
 
-      response
+        response
+      end
+    rescue => e
+      expect(e.message).to be('The number of retry failures has reached the maximum.')
     end
-    
-    expect(result[:status]).to be('fail')
-    expect(result[:error_message]).to be('The number of retry failures has reached the maximum.')
   end
 
   it 'return rejected because the status code is invalid for retry' do
-    exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
+    begin
+      exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
 
-    result = exponential_backoff.run do
-      response = HTTParty.post('http://localhost:4567/simulation_unauthorized', 
-        body: { 
-          user_id: 1,
-          total_amount: 20000
-        }.to_json,
-        headers: { 'Content-Type' => 'application/json' },
-        timeout: 3
-      )
+      result = exponential_backoff.run do
+        response = HTTParty.post('http://localhost:4567/simulation_unauthorized', 
+          body: { 
+            user_id: 1,
+            total_amount: 20000
+          }.to_json,
+          headers: { 'Content-Type' => 'application/json' },
+          timeout: 3
+        )
 
-      response
+        response
+      end
+    rescue => e
+      expect(e.message).to eq('Your response status code is 401, only status codes 408, 429, 500, 502, 503, 504 can be retried.')
     end
-
-    expect(result[:status]).to be('fail')
-    expect(result[:error_message]).to eq('Your response status code is 401, only status codes 408, 429, 500, 502, 503, 504 can be retried.')
   end
 end

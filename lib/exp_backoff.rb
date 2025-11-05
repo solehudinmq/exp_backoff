@@ -35,7 +35,7 @@ module ExpBackoff
           
           return { status: 'success', data: result }
         rescue ExpBackoff::Error::HttpError => e
-          return { status: 'fail', error_message: "Your response status code is #{e.status_code.to_s}, only status codes #{RETRY_STATUS_CODE.join(', ')} can be retried." } unless RETRY_STATUS_CODE.include?(e.status_code)
+          raise "Your response status code is #{e.status_code.to_s}, only status codes #{RETRY_STATUS_CODE.join(', ')} can be retried." unless RETRY_STATUS_CODE.include?(e.status_code)
 
           # if the number of failures < max failures then provide a waiting time with exponential backoff.
           if retries < @max_retries
@@ -49,7 +49,7 @@ module ExpBackoff
             sleep(sleep_duration)
             retries += 1
           else
-            return { status: 'fail', error_message: 'The number of retry failures has reached the maximum.' }
+            raise 'The number of retry failures has reached the maximum.'
           end
         end
       end

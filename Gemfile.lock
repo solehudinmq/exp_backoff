@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     exp_backoff (0.1.0)
+      httparty (~> 0.21)
 
 GEM
   remote: https://rubygems.org/

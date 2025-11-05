@@ -2,11 +2,10 @@
 
 source "https://rubygems.org"
 
-# gem 'exp_backoff', path: '../exp_backoff' # for test in localhost
+gem 'exp_backoff', path: '../' # for test in localhost
 gem "sinatra"
-gem "exp_backoff", git: "git@github.com:solehudinmq/exp_backoff.git", branch: "main"
+# gem "exp_backoff", git: "git@github.com:solehudinmq/exp_backoff.git", branch: "main"
 gem "byebug"
-gem 'httparty'
 gem "activerecord"
 gem "sqlite3"
 gem "rackup", "~> 2.2"
