@@ -55,11 +55,11 @@ description of parameters :
 - base_interval (optional) = this is the base value to start the exponential backoff calculation ( default value is 0.5 ).
 - max_jitter_factor (optional) = a random factor added to the wait time to prevent multiple clients from retrying at the same time ( default value is 0.5 ).
 
-For more details, you can see the following example : [example/retry.rb](Here).
+For more details, you can see the following example : [example/retry.rb](https://github.com/solehudinmq/exp_backoff/blob/development/example/retry.rb).
 
 ## Example Implementation in Your Application
 
-For examples of applications that use this gem, you can see them here : [example](Here).
+For examples of applications that use this gem, you can see them here : [example](https://github.com/solehudinmq/exp_backoff/tree/development/example).
 
 ## Contributing
 
