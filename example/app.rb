@@ -10,21 +10,28 @@ def fibonacci(n)
   b
 end
 
-puts "==============================================================================="
-puts "1. retry case for using your internal method, and succeeded in the 1st attempt."
-puts "==============================================================================="
+puts "==========================================================="
+puts "1. retry case for using your internal method, and it works."
+puts "==========================================================="
 result = ::ExpBackoff::Jitter.new(maximum_retry: 3, base_delay: 0.3, max_delay: 0.3)
 result.perform do
   fibonacci(10)
 end
 
-puts "========================================================================"
-puts "2. retry case for using your internal method, and failed on the 1st try."
-puts "========================================================================"
+puts "=================================================================================="
+puts "2. retry case for using your internal method, with the final result still failing."
+puts "=================================================================================="
 result = ::ExpBackoff::Jitter.new(maximum_retry: 3, base_delay: 0.3, max_delay: 0.3)
-result.perform do
-  begin
-    raise "Error retry."
-  rescue => e
+begin
+  result.perform do
+    fibonacci(10) + 'b'
   end
+rescue => e
+  puts e.message
 end
+
+# run this command :
+# - open terminal
+# - cd example
+# - bundle install
+# - bundle exec ruby app.rb
