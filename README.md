@@ -6,11 +6,11 @@ Exp backoff is a Ruby library that implements a retry mechanism with an exponent
 
 Potential problems when there is no retry mechanism in our system :
 
-![Logo Ruby](./high_flow/Mekanisme%20Retry-problem.jpg)
+![Logo Ruby](./high_flow/problem.jpg)
 
 With the Exponential Backoff and jitter retry mechanism, our system now has the ability to perform retry :
 
-![Logo Ruby](./high_flow/Mekanisme%20Retry-jitter.jpg)
+![Logo Ruby](./high_flow/solution.jpg)
 
 ## Requirement
 
