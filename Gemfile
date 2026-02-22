@@ -6,6 +6,7 @@ source "https://rubygems.org"
 gemspec
 
 gem "httparty"
+gem "logger"
 
 group :development, :test do
   gem "byebug"

@@ -1,69 +1,30 @@
-# app.rb
-require 'sinatra'
-require 'json'
-require 'byebug'
+require 'exp_backoff'
 
-require_relative 'order'
+def fibonacci(n)
+  return n if n <= 1
 
-before do
-  content_type :json
+  a, b = 0, 1
+  (n - 1).times do
+    a, b = b, a + b
+  end
+  b
 end
 
-# create data order success
-post '/orders' do
-  begin
-    request_body = JSON.parse(request.body.read)
+puts "==============================================================================="
+puts "1. retry case for using your internal method, and succeeded in the 1st attempt."
+puts "==============================================================================="
+result = ::ExpBackoff::Jitter.new(maximum_retry: 3, base_delay: 0.3, max_delay: 0.3)
+result.perform do
+  fibonacci(10)
+end
 
-    # save request data to redis queue
-    order = Order.new(request_body)
-    
-    if order.save
-      { order_id: order.id, message: 'success' }.to_json
-    else
-      status 400
-      return { error: order.errors.message }.to_json
-    end
+puts "========================================================================"
+puts "2. retry case for using your internal method, and failed on the 1st try."
+puts "========================================================================"
+result = ::ExpBackoff::Jitter.new(maximum_retry: 3, base_delay: 0.3, max_delay: 0.3)
+result.perform do
+  begin
+    raise "Error retry."
   rescue => e
-    status 500
-    return { error: e.message }.to_json
   end
 end
-
-# server errors simulations
-post '/simulation_server_problems' do
-  status 503
-  return { error: 'The server is having problems.' }.to_json
-end
-
-# unauthorized simulations
-post '/simulation_unauthorized' do
-  status 401
-  return { error: 'Unauthorized' }.to_json
-end
-
-# get data orders
-get '/orders' do
-  begin
-    orders = Order.all
-
-    { count: orders.size, orders: orders }.to_json
-  rescue => e
-    status 500
-    return { error: e.message }.to_json
-  end
-end
-
-# ====== run producer ======
-# 1. open terminal
-# 2. cd your_project
-# 3. bundle install
-# 4. bundle exec ruby app.rb
-# 5. create data order
-# curl --location 'http://localhost:4567/orders' \
-# --header 'Content-Type: application/json' \
-# --data '{
-#     "user_id": 1,
-#     "total_amount": 30000
-# }'
-# 6. get data order
-# curl --location 'http://localhost:4567/orders'
