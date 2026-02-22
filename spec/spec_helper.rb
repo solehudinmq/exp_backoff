@@ -5,8 +5,6 @@ require "exp_backoff"
 require "httparty"
 require "json"
 
-require_relative "../example/order"
-
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"

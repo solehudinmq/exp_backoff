@@ -1,5 +1,3 @@
-require 'json'
-
 require_relative '../utils/logging'
 
 module ExpBackoff
@@ -24,9 +22,11 @@ module ExpBackoff
       total_retry = 1
 
       begin
-        yield
+        result = yield
 
         logger.info("Retry #{total_retry} successful.")
+        
+        result
       rescue => e
         if total_retry < @maximum_retry
           logger.warn("Retry #{total_retry} failed, the process will be retried again.")

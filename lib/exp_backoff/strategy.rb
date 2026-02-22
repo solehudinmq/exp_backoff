@@ -1,4 +1,5 @@
 require_relative 'strategies/jitter_strategy'
+require_relative 'strategies/rest_api_jitter_strategy'
 
 module ExpBackoff
   module Strategy
@@ -6,6 +7,8 @@ module ExpBackoff
       case strategy
       when :default
         ::ExpBackoff::JitterStrategy.new(maximum_retry: maximum_retry, base_delay: base_delay, max_delay: max_delay)
+      when :rest_api
+        ::ExpBackoff::RestApi::JitterStrategy.new(maximum_retry: maximum_retry, base_delay: base_delay, max_delay: max_delay)
       else
         raise ArgumentError, "Strategy #{strategy} unknown."
       end

@@ -1,74 +1,83 @@
 # frozen_string_literal: true
 
-# required to run : bundle exec ruby app.rb
 RSpec.describe ExpBackoff do
-  before(:all) do
-    Order.delete_all
-  end
-
   it "has a version number" do
     expect(ExpBackoff::VERSION).not_to be nil
   end
 
-  it "return successful due to successful retry" do
-    exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
+  context "Strategy :default" do
+    it "retry successful" do
+      exp_back = ::ExpBackoff::Jitter.new(strategy: :default, maximum_retry: 3, base_delay: 0.3, max_delay: 0.3)
 
-    result = exponential_backoff.run do
-      response = HTTParty.post('http://localhost:4567/orders', 
-        body: { 
-          user_id: 1,
-          total_amount: 20000
-        }.to_json,
-        headers: { 'Content-Type' => 'application/json' },
-        timeout: 3
-      )
-
-      response
-    end
-    
-    expect(result[:status]).to be('success')
-    expect(result[:data].parsed_response["message"]).to eq('success')
-  end
-
-  it 'return failed because 3 times failed to retry' do
-    begin
-      exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
-
-      result = exponential_backoff.run do
-        response = HTTParty.post('http://localhost:4567/simulation_server_problems', 
-          body: { 
-            user_id: 1,
-            total_amount: 20000
-          }.to_json,
-          headers: { 'Content-Type' => 'application/json' },
-          timeout: 3
-        )
-
-        response
+      result = exp_back.perform do
+        1 + 1
       end
-    rescue => e
-      expect(e.message).to be('The number of retry failures has reached the maximum.')
+
+      expect(result).to be 2
+    end
+
+    it "retry failed" do
+      exp_back = ::ExpBackoff::Jitter.new(strategy: :default, maximum_retry: 3, base_delay: 0.3, max_delay: 0.3)
+
+      begin
+        result = exp_back.perform do
+          1 + 'a'
+        end
+      rescue => e
+        expect(e.message).to eq('Retry has reached maximum attempts.')
+      end 
     end
   end
 
-  it 'return rejected because the status code is invalid for retry' do
-    begin
-      exponential_backoff = ExpBackoff::Retry.new(max_retries: 3, base_interval: 0.5, max_jitter_factor: 0.5)
+  context "Strategy :rest_api" do
+    it 'retry successful for method :GET' do
+      exp_back = ::ExpBackoff::Jitter.new(strategy: :rest_api, maximum_retry: 3, base_delay: 0.3, max_delay: 0.3)
+      
+      result = exp_back.perform(url: "https://dummyjson.com/products/1", http_method: :GET, headers: { 'Content-Type': 'application/json' }, timeout: 5 )
 
-      result = exponential_backoff.run do
-        response = HTTParty.post('http://localhost:4567/simulation_unauthorized', 
-          body: { 
-            user_id: 1,
-            total_amount: 20000
-          }.to_json,
-          headers: { 'Content-Type' => 'application/json' },
-          timeout: 3
-        )
+      expect(result.code).to be 200
+    end
 
-        response
-      end
-    rescue => e
-      expect(e.message).to eq('Your response status code is 401, only status codes 408, 429, 500, 502, 503, 504 can be retried.')
+    it 'retry successful for method :POST' do
+      exp_back = ::ExpBackoff::Jitter.new(strategy: :rest_api, maximum_retry: 3, base_delay: 0.3, max_delay: 0.3)
+      
+      result = exp_back.perform(url: "https://dummyjson.com/products/add", http_method: :POST, headers: { 'Content-Type': 'application/json' }, body: { title: "Produk Dummy Title 1", description: "Produk Dummy Description 1" }, timeout: 5 )
+
+      expect(result.code).to be 201
+    end
+
+    it 'retry successful for method :PUT' do
+      exp_back = ::ExpBackoff::Jitter.new(strategy: :rest_api, maximum_retry: 3, base_delay: 0.3, max_delay: 0.3)
+      
+      result = exp_back.perform(url: "https://dummyjson.com/products/1", http_method: :PUT, headers: { 'Content-Type': 'application/json' }, body: { title: "Produk Dummy Title 1 - PUT", description: "Produk Dummy Description 1 - PUT" }, timeout: 5 )
+
+      expect(result.code).to be 200
+    end
+
+    it 'retry successful for method :PATCH' do
+      exp_back = ::ExpBackoff::Jitter.new(strategy: :rest_api, maximum_retry: 3, base_delay: 0.3, max_delay: 0.3)
+      
+      result = exp_back.perform(url: "https://dummyjson.com/products/1", http_method: :PATCH, headers: { 'Content-Type': 'application/json' }, body: { title: "Produk Dummy Title 1 - PATCH" }, timeout: 5 )
+
+      expect(result.code).to be 200
+    end
+
+    it 'retry successful for method :DELETE' do
+      exp_back = ::ExpBackoff::Jitter.new(strategy: :rest_api, maximum_retry: 3, base_delay: 0.3, max_delay: 0.3)
+      
+      result = exp_back.perform(url: "https://dummyjson.com/products/1", http_method: :DELETE, headers: { 'Content-Type': 'application/json' }, timeout: 5 )
+
+      expect(result.code).to be 200
+    end
+
+    it 'retry failed' do
+      exp_back = ::ExpBackoff::Jitter.new(strategy: :rest_api, maximum_retry: 3, base_delay: 0.3, max_delay: 0.3)
+
+      begin
+        result = exp_back.perform(url: "https://dummyjson.com/products/1?delay=3000", http_method: :GET, headers: { 'Content-Type': 'application/json' }, timeout: 2 )
+      rescue => e
+        expect(e.message).to eq('Retry has reached maximum attempts.')
+      end 
     end
   end
 end
